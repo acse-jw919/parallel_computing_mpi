@@ -1,5 +1,6 @@
 #include <mpi.h>
 #include <iostream>
+#include <ctime>
 
 using namespace std;
 
@@ -7,6 +8,7 @@ void generateMatrix(int, int, double*);
 void printMatrix(int, int, double*);
 
 int main(int argc, char** argv){
+    clock_t startTime, endTime;
 
     MPI_Status status;
     int myid, np;
@@ -15,8 +17,8 @@ int main(int argc, char** argv){
     MPI_Comm_rank(MPI_COMM_WORLD, &myid);
     MPI_Comm_size(MPI_COMM_WORLD, &np);
 
-    int A_m = 5, B_n = 4, A_mp = 0;
-    int A_n = 4, B_m = A_n;
+    int A_m = 1000, B_n = 1000, A_mp = 0;
+    int A_n = 1000, B_m = A_n;
     double* B = new double[B_m * B_n];
     double* A = new double[A_m * A_n];
 
@@ -30,8 +32,9 @@ int main(int argc, char** argv){
     if(!myid){
         generateMatrix(A_m, A_n, A);
         generateMatrix(B_m, B_n, B);
-        printMatrix(A_m - A_mp, A_n, A);
-        printMatrix(B_m, B_n, B);
+        // printMatrix(A_m - A_mp, A_n, A);
+        // printMatrix(B_m, B_n, B);
+        startTime = clock();
     }
     MPI_Bcast(B, B_m * B_n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     MPI_Scatter(A, nrows * A_n, MPI_DOUBLE, A_row, nrows * A_n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
@@ -50,7 +53,9 @@ int main(int argc, char** argv){
     MPI_Gather(tmp_result, nrows*B_n, MPI_DOUBLE, result, nrows*B_n, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
     if(!myid){
-        printMatrix(A_m - A_mp, B_n, result);
+        endTime = clock();
+        cout << (double) (endTime - startTime) / CLOCKS_PER_SEC << " seconds\n";
+        // printMatrix(A_m - A_mp, B_n, result);
     }
 
     MPI_Finalize();
