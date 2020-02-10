@@ -28,7 +28,7 @@ public:
         return this->blank - dir;
     }
 
-    bool moveable(int dir, int prev){
+    bool moveable(int dir, int prev, int phase){
         if(prev == this->blank + dir) return false;
         if(dir == 1){
             if(this->blank % 4 == 3) return false;
@@ -41,6 +41,8 @@ public:
         } else {
             return false;
         }
+        int target = this->blank + dir;
+        if(target + 1 == this->p[target] && target < phase * 4) return false;
         return true;
     }
 
@@ -50,6 +52,13 @@ public:
             if(this->p[i] != i + 1) return false;
         }
         return true;
+    }
+
+    int checkPhase(){
+        for(int i = 0; i < 4; i++){
+            if(i + 1 != this->p[i]) return 1;
+        }
+        return 2;
     }
 
     void printPuzzle(){
@@ -69,17 +78,18 @@ public:
 
 struct triplet{
     Puzzle *puzzle;
-    int dir, prev, length;
-    triplet(int d, int p, int l, Puzzle *pz){
+    int dir, prev, length, phase;
+    triplet(int d, int p, int l, int ph, Puzzle *pz){
         dir = d;
         prev = p;
         length = l;
         puzzle = pz;
+        phase = ph;
     }
 };
 
 void find_solution(Puzzle*);
-void ava_dir(Puzzle&, vector<int>&, int);
+void ava_dir(Puzzle&, vector<int>&, int, int);
 
 int main(int argc, char** argv){
 
@@ -93,12 +103,13 @@ void find_solution(Puzzle *puzzle){
     queue<triplet> q;
     vector<int> tmp = vector<int>();
     if(puzzle->ordered()) return;
-    ava_dir(*puzzle, tmp, -1);
+    int phase = puzzle->checkPhase();
+    ava_dir(*puzzle, tmp, -1, phase);
     for(int i = 0; i < tmp.size(); i++){
         Puzzle *tp = new Puzzle();
         for(int j = 0; j < 16; j++) tp->p[j] = puzzle->p[j];
         tp->printPuzzle();
-        triplet t(tmp[i], -1, 1, tp);
+        triplet t(tmp[i], -1, 1, phase, tp);
         q.push(t);
     }
     int iter_count = 0;
@@ -115,12 +126,13 @@ void find_solution(Puzzle *puzzle){
             break;
         }
         tmp = vector<int>();
-        ava_dir(*current.puzzle, tmp, prev);
+        phase = current.puzzle->checkPhase();
+        ava_dir(*current.puzzle, tmp, prev, phase);
         for(int dir : tmp){
             Puzzle *tp = new Puzzle();
             for(int i = 0; i < 16; i++) tp->p[i] = current.puzzle->p[i];
             tp->blank = current.puzzle->blank;
-            triplet t(dir, prev, current.length + 1, tp);
+            triplet t(dir, prev, current.length + 1, phase, tp);
             q.push(t);
         }
         q.pop();
@@ -128,10 +140,10 @@ void find_solution(Puzzle *puzzle){
     }
 }
 
-void ava_dir(Puzzle& puzzle, vector<int>& result, int prev){
+void ava_dir(Puzzle& puzzle, vector<int>& result, int prev, int phase){
     int dirs[4] = {1, -1, 4, -4};
     for(int i = 0; i < 4; i++){
-        bool re = puzzle.moveable(dirs[i], prev);
+        bool re = puzzle.moveable(dirs[i], prev, phase);
         if(re) result.push_back(dirs[i]);
     }
 }
