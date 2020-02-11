@@ -42,7 +42,7 @@ public:
         delete[] tv;
     }
 
-    bool shortest(int start, vector<int> follow, vector<int> points, vector<int>& route, vector<int> ban){
+    bool shortest(int start, vector<int> follow, vector<int> des, vector<int> points, vector<int>& route, vector<int> ban){
         queue<vector<int> > route_queue;
         queue<bool*> flag_queue;
         vector<int> route_init;
@@ -89,6 +89,16 @@ public:
                 if(new_route.size() > points.size() && nei[i] == start){
                     bool valid = true;
                     for(int j = 0; j < points.size(); j++) valid = valid && new_flag[j];
+                    if(des.size() > 1){
+                        int current_index = 0;
+                        for(int j = 0; j < new_route.size(); j++){
+                            if(new_route[j] == des[current_index]){
+                                current_index++;
+                                if(current_index == des.size()) break;
+                            }
+                        }
+                        if(current_index != des.size()) valid = false;
+                    }
                     if(valid){
                         route.resize(0);
                         for(int j = 0; j < new_route.size() - 1; j++) {
@@ -98,6 +108,7 @@ public:
                         break;
                     }
                 }
+                if(nei[i] == start) continue;
                 route_queue.push(new_route);
                 flag_queue.push(new_flag);
             }
@@ -105,7 +116,7 @@ public:
             route_queue.pop();
             flag_queue.pop();
         }
-        return false;
+        return p1;
     }
 
     vector<int> neighbors(int point){
@@ -145,9 +156,18 @@ public:
         }
         cout << endl;
     }
+
+    int loc(int v){
+        for(int i = 0; i < 16; i++){
+            if(this->p[i] == v){
+                return i;
+            }
+        }
+    }
 };
 
 void find_solution(Puzzle*);
+void place(Puzzle*, int, int, vector<int>);
 
 int main(int argc, char** argv){
 
@@ -157,53 +177,190 @@ int main(int argc, char** argv){
     return 0;
 }
 
-void find_solution(Puzzle *puzzle){
-    puzzle->printPuzzle();
+void place(Puzzle *puzzle, int v, int target, vector<int> ban){
     vector<int> route;
     vector<int> points;
-    vector<int> ban;
     vector<int> follow;
-    points.push_back(15);
-    points.push_back(0);
-    puzzle->shortest(2, follow, points, route, ban);
-    puzzle->rotate(2, 0, route, route.size());
+    vector<int> des;
+
+    if(puzzle->p[0] != v){
+        int pos = -1;
+        for(int i = 0; i < 16; i++){
+            if(puzzle->p[i] == v){
+                pos = i;
+                break;
+            }
+        }
+        points.push_back(puzzle->blank);
+        points.push_back(target);
+        des.push_back(target);
+        puzzle->shortest(pos, follow, des, points, route, ban);
+        puzzle->rotate(pos, target, route, route.size());
+    }
+}
+
+void find_solution(Puzzle *puzzle){
     puzzle->printPuzzle();
+
+    vector<int> route;
+    vector<int> points;
+    vector<int> follow;
+    vector<int> des;
+    vector<int> ban;
+
+    place(puzzle, 1, 0, ban);
     puzzle->flag[0] = true;
-
-    route.resize(0);
-    points.resize(0);
-    ban.resize(0);
-    follow.resize(0);
-
-    points.push_back(puzzle->blank);
-    points.push_back(1);
-    puzzle->shortest(4, follow, points, route, ban);
-    puzzle->rotate(4, 1, route, route.size());
-    puzzle->printPuzzle();
+    place(puzzle, 2, 1, ban);
     puzzle->flag[1] = true;
-
-    route.resize(0);
-    points.resize(0);
-    ban.resize(0);
-    follow.resize(0);
-
-    points.push_back(puzzle->blank);
-    points.push_back(9);
-    puzzle->shortest(12, follow, points, route, ban);
-    puzzle->rotate(12, 9, route, route.size());
     puzzle->printPuzzle();
 
-    route.resize(0);
-    points.resize(0);
-    ban.resize(0);
-    follow.resize(0);
+    int three = puzzle->loc(3);
+    if(three != 10) place(puzzle, 3, 10, ban);
+    int four = puzzle->loc(4);
+    if(four != 9){
+        ban.push_back(10);
+        place(puzzle, 4, 9, ban);
+    }
 
+    ban.resize(0);
     points.push_back(puzzle->blank);
+    points.push_back(2);
     points.push_back(3);
-    follow.push_back(9);
-    puzzle->shortest(5, follow, points, route, ban);
-    puzzle->rotate(5, 3, route, route.size());
+    follow.push_back(10);
+    des.push_back(3);
+    des.push_back(2);
+    bool re = puzzle->shortest(9, follow, des, points, route, ban);
+    if(re){
+        puzzle->rotate(9, 3, route, route.size());
+        puzzle->printPuzzle();
+        puzzle->flag[2] = true;
+        puzzle->flag[3] = true;
+    } else {
+        cout << "False" << endl;
+        return;
+    }
+
+    ban.resize(0);
+    place(puzzle, 5, 4, ban);
+    puzzle->flag[4] = true;
     puzzle->printPuzzle();
 
+    int thirteen = puzzle->loc(13);
+    if(three != 10) place(puzzle, 13, 10, ban);
+    puzzle->printPuzzle();
+    int nine = puzzle->loc(9);
+    if(nine != 14){
+        ban.push_back(10);
+        place(puzzle, 9, 14, ban);
+    }
+    puzzle->printPuzzle();
+
+    ban.resize(0);
+    points.resize(0);
+    follow.resize(0);
+    des.resize(0);
+    route.resize(0);
+    
+    points.push_back(puzzle->blank);
+    points.push_back(8);
+    points.push_back(12);
+    follow.push_back(14);
+    des.push_back(12);
+    des.push_back(8);
+    re = puzzle->shortest(10, follow, des, points, route, ban);
+    if(re){
+        puzzle->rotate(10, 12, route, route.size());
+        puzzle->printPuzzle();
+        puzzle->flag[8] = true;
+        puzzle->flag[12] = true;
+    } else {
+        cout << "False" << endl;
+        return;
+    }
+
+    ban.resize(0);
+    place(puzzle, 6, 5, ban);
+    puzzle->flag[5] = true;
+    puzzle->printPuzzle();
+
+    int seven = puzzle->loc(7);
+    int eight = puzzle->loc(8);
+    vector<int> went;
+    re = false;
+    while(!re){
+        vector<int> seven_neighbor = puzzle->neighbors(seven);
+        for(int i = 0; i < seven_neighbor.size(); i++){
+            ban.resize(0);
+            points.resize(0);
+            follow.resize(0);
+            des.resize(0);
+            route.resize(0);
+            ban.push_back(seven);
+            points.push_back(puzzle->blank);
+            points.push_back(seven_neighbor[i]);
+            des.push_back(seven_neighbor[i]);
+            re = puzzle->shortest(eight, follow, des, points, route, ban);
+            if(re) {
+                puzzle->rotate(eight, seven_neighbor[i], route, route.size());
+                puzzle->printPuzzle();
+                break;
+            }
+        }
+        if(!re){
+            went.push_back(seven);
+            int i = 0;
+            for(; i < seven_neighbor.size(); i++){
+                bool tmp = false;
+                for(int j = 0; j < went.size(); j++){
+                    if(seven_neighbor[i] == went[j]){
+                        tmp = true;
+                        break;
+                    }
+                }
+                if(!tmp){
+                    ban.resize(0);
+                    place(puzzle, 7, seven_neighbor[i], ban);
+                    seven = puzzle->loc(7);
+                    eight = puzzle->loc(8);
+                    break;
+                }
+            }
+            if(i == seven_neighbor.size()){
+                cout << "False" << endl;
+                return;
+            }
+        }
+    }
+
+    seven = puzzle->loc(7);
+    eight = puzzle->loc(8);
+
+    ban.resize(0);
+    points.resize(0);
+    follow.resize(0);
+    des.resize(0);
+    route.resize(0);
+    
+    points.push_back(puzzle->blank);
+    points.push_back(6);
+    points.push_back(7);
+    follow.push_back(seven);
+    des.push_back(7);
+    des.push_back(6);
+    re = puzzle->shortest(eight, follow, des, points, route, ban);
+    if(re){
+        puzzle->rotate(eight, 7, route, route.size());
+        puzzle->printPuzzle();
+        puzzle->flag[6] = true;
+        puzzle->flag[7] = true;
+    } else {
+        cout << "False" << endl;
+        return;
+    }
+
+    ban.resize(0);
+    place(puzzle, 10, 9, ban);
+    puzzle->flag[9] = true;
+    puzzle->printPuzzle();
 
 }
