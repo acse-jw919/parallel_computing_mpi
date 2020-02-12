@@ -3,9 +3,9 @@
 #include <fstream>
 #include <ctime>
 
-#define M 1200
-#define N 1200
-#define ITER_TIME 400
+// #define M 1200
+// #define N 1200
+#define ITER_TIME 100
 #define PRINT_RESULT false
 
 using namespace std;
@@ -28,7 +28,7 @@ int main(int argc, char** argv){
     MPI_Comm_size(MPI_COMM_WORLD, &np);
 
     int m, n;
-    bool *data = readData(myid, np, "data.txt", m, n);
+    bool *data = readData(myid, np, "data/2078_source.txt", m, n);
     if(data == nullptr){
         cout << "Cannot read file into processor " << myid << endl;
         return -1;
@@ -40,7 +40,9 @@ int main(int argc, char** argv){
         if(myid > 0) MPI_Isend(&data[n], n, MPI_CXX_BOOL, myid - 1, 1, MPI_COMM_WORLD, &req_head);
 
         if(myid > 0) MPI_Recv(&data[0], n, MPI_CXX_BOOL, myid - 1, 0, MPI_COMM_WORLD, &status_head);
+        else for(int j = 0; j < n; j++) data[j] = false;
         if(myid < np - 1) MPI_Recv(&data[(m - 1) * n], n, MPI_CXX_BOOL, myid + 1, 1, MPI_COMM_WORLD, &status_tail);
+        else for(int j = 0; j < n; j++) data[(m - 1) * n + j] = false;
         evolve(m, n, data, false);
     }
     double time_elapsed = (double)(clock() - startTime) / CLOCKS_PER_SEC;
