@@ -2,9 +2,9 @@
 #include <cmath>
 #include <ctime>
 
-#define M 5
-#define N 5
-#define ITER_TIME 9
+#define M 1200
+#define N 1200
+#define ITER_TIME 400
 
 using namespace std;
 
@@ -21,19 +21,18 @@ int main(int argc, char** argv){
     bool *init_map = new bool[M*N];
     // generate(M*N, init_map);
     generateByValue(init_map);
-    print_map(M, N, init_map);
+    // print_map(M, N, init_map);
 
     clock_t start = clock();
     for(int i = 0; i < ITER_TIME; i++){
         // cout << "ITER: " << i + 1 << endl;
-        evolve(M, N, init_map, true);
+        evolve(M, N, init_map, false);
         // print_map(M, N, init_map);
     }
-    print_map(M, N, init_map);
+    // print_map(M, N, init_map);
     clock_t end = clock();
-
     cout << (double) (end - start) / CLOCKS_PER_SEC << " seconds" << endl;
-
+    delete[] init_map;
     return 0;
 }
 
@@ -45,11 +44,18 @@ void generate(int size, bool *result){
 
 void generateByValue(bool *result){
     bool tmp[M*N] = {
-        0, 0, 1, 0, 0,
-        0, 1, 1, 0, 1,
-        0, 1, 0, 0, 0,
-        0, 1, 1, 0, 0,
-        1, 1, 1, 0, 1
+        0, 0, 1, 0, 0, 0, 0, 1, 0,
+        0, 1, 1, 0, 1, 0, 1, 1, 0,
+        0, 1, 0, 0, 0, 1, 0, 1, 0,
+        0, 1, 1, 0, 0, 0, 1, 0, 0,
+        1, 1, 1, 0, 1, 0, 0, 0, 1,
+        0, 1, 0, 1, 1, 1, 1, 0, 0,
+        0, 0, 1, 0, 0, 0, 0, 1, 0,
+        0, 1, 1, 0, 1, 0, 1, 1, 0,
+        0, 1, 0, 0, 0, 1, 0, 1, 0,
+        0, 1, 1, 0, 0, 0, 1, 0, 0,
+        1, 1, 1, 0, 1, 0, 0, 0, 1,
+        0, 1, 0, 1, 1, 1, 1, 0, 0
     };
     for(int i = 0; i < M*N; i++){
         result[i] = tmp[i];
@@ -104,4 +110,5 @@ void evolve(int m, int n, bool *lmap, bool periodic){
             lmap[i * n + j] = tmp[i * n + j];
         }
     }
+    delete[] tmp;
 }
