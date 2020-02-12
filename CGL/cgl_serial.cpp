@@ -2,12 +2,13 @@
 #include <cmath>
 #include <ctime>
 
-#define M 500
-#define N 400
-#define ITER_TIME 100
+#define M 5
+#define N 5
+#define ITER_TIME 9
 
 using namespace std;
 
+void generateByValue(bool*);
 void generate(int, bool*);
 void print_map(int, int, bool*);
 void evolve(int, int, bool*, bool);
@@ -18,8 +19,9 @@ int diry[8] = {0, -1, 1, 0, -1, 1, -1, 1};
 int main(int argc, char** argv){
 
     bool *init_map = new bool[M*N];
-    generate(M*N, init_map);
-    // print_map(M, N, init_map);
+    // generate(M*N, init_map);
+    generateByValue(init_map);
+    print_map(M, N, init_map);
 
     clock_t start = clock();
     for(int i = 0; i < ITER_TIME; i++){
@@ -27,6 +29,7 @@ int main(int argc, char** argv){
         evolve(M, N, init_map, true);
         // print_map(M, N, init_map);
     }
+    print_map(M, N, init_map);
     clock_t end = clock();
 
     cout << (double) (end - start) / CLOCKS_PER_SEC << " seconds" << endl;
@@ -39,6 +42,20 @@ void generate(int size, bool *result){
         result[i] = rand() % 2;
     }
 }
+
+void generateByValue(bool *result){
+    bool tmp[M*N] = {
+        0, 0, 1, 0, 0,
+        0, 1, 1, 0, 1,
+        0, 1, 0, 0, 0,
+        0, 1, 1, 0, 0,
+        1, 1, 1, 0, 1
+    };
+    for(int i = 0; i < M*N; i++){
+        result[i] = tmp[i];
+    }
+}
+
 
 void print_map(int m, int n, bool *lmap){
     for(int i = 0; i < m; i++){
@@ -57,21 +74,26 @@ void evolve(int m, int n, bool *lmap, bool periodic){
             int cx = i, cy = j;
             int cindex = i * n + j;
             int alive = 0;
+            // cout << "[" << cx << "," << cy << "]" << endl;
             for(int k  = 0; k < 8; k++){
-                int tindex = (cx + dirx[k]) * n + (cy + diry[k]);
-                int tx = tindex / n, ty = tindex % n;
+                int tindex, tx, ty; 
                 if(!periodic){
+                    tindex = (cx + dirx[k]) * n + (cy + diry[k]);
+                    tx = tindex / n;
+                    ty = tindex % n;
                     if(tindex < 0 || tindex > m*n) continue;
                     if(k < 4 && tx != cx && ty != cy) continue;
                     if(k >= 4 && (abs(tx - cx) + abs(ty - cy) != 2)) continue;
                 } else {
-                    tindex = (tindex + m * n) % (m * n);
-                    tx = (tx + m) % m;
-                    ty = (ty + n) % n;
+                    tx = (cx + dirx[k] + m) % m;
+                    ty = (cy + diry[k] + n) % n;
+                    tindex = tx * n + ty;
                 }
+                // cout << "(" << tx << "," << ty << ") ";
                 if(lmap[tindex]) alive++;
-                if(alive > 3) break;
+                // if(alive > 3) break;
             }
+            // cout << endl << endl;
             if(lmap[cindex] && (alive < 2 || alive > 3)) tmp[cindex] = false;
             else if(!lmap[cindex] && alive == 3) tmp[cindex] = true;
             else tmp[cindex] = lmap[cindex];
